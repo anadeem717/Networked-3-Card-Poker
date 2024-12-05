@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="WelcomePageController" spacing="20" padding="20" style="-fx-background-color: #DCDCDC;">
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="WelcomePageController" spacing="20" style="-fx-background-color: #DCDCDC;">
     <Label text="WELCOME!\nTHREE CARD POKER" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #333333;" alignment="CENTER"/>
     <VBox spacing="10">
         <HBox spacing="10">
@@ -15,5 +15,5 @@
             <TextField fx:id="portField" promptText="Enter port" style="-fx-background-color: white;"/>
         </HBox>
     </VBox>
-    <Button text="Connect to server" onAction="#connectToServer" style="-fx-background-color: #E74C3C; -fx-text-fill: white; -fx-font-size: 16px;"/>
+    <Button text="Connect to server" onAction="#handleConnectToServer" style="-fx-background-color: #E74C3C; -fx-text-fill: white; -fx-font-size: 16px;"/>
 </VBox>

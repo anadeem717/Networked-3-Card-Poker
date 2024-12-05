@@ -1,15 +1,15 @@
-import server.PokerInfo;
-
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-import javafx.scene.image.ImageView;
+import java.io.ObjectOutputStream;
 
 public class GameplayController {
-
     private ClientGUI clientGUI;
+    private ObjectOutputStream out;
 
     @FXML
     private Label winningsLabel;
@@ -32,37 +32,79 @@ public class GameplayController {
     @FXML
     private Text gameInfoText;
 
+    // Set the ClientGUI instance
     public void setClientGUI(ClientGUI clientGUI) {
         this.clientGUI = clientGUI;
     }
 
+    // Set the output stream for sending messages
+    public void setConnection(ObjectOutputStream out) {
+        this.out = out;
+    }
+
     @FXML
     public void placeAnte() {
-        PokerInfo pokerInfo = new PokerInfo(null, "Ante placed", "play", true, false);
-        clientGUI.sendPokerInfo(pokerInfo);
+        sendPokerInfo("Ante placed", true, false);
     }
 
     @FXML
     public void placePairPlus() {
-        PokerInfo pokerInfo = new PokerInfo(null, "Pair Plus placed", "play", false, true);
-        clientGUI.sendPokerInfo(pokerInfo);
+        sendPokerInfo("Pair Plus placed", false, true);
     }
 
     @FXML
     public void playGame() {
-        PokerInfo pokerInfo = new PokerInfo(null, "Playing", "play", true, true);
-        clientGUI.sendPokerInfo(pokerInfo);
+        sendPokerInfo("Playing", true, true);
     }
 
-    public void updateGameState(PokerInfo pokerInfo) {
-        // Update the UI based on the received PokerInfo object
-        winningsLabel.setText("$" + pokerInfo.player.getWinnings());
-        gameInfoText.setText(pokerInfo.getGameRes());
+    // Generic method to send poker info
+    private void sendPokerInfo(String action, boolean antePlaced, boolean pairPlusPlaced) {
+        try {
+            PokerInfo pokerInfo = new PokerInfo(
+                    new Player(),
+                    action,
+                    "play",
+                    antePlaced,
+                    pairPlusPlaced
+            );
+            clientGUI.sendPokerInfo(pokerInfo);
+        } catch (Exception e) {
+            showAlert("Error", "An error occurred: " + e.getMessage());
+        }
+    }
 
-        // Display cards for the player and dealer
-        // Note: You may need a method to add images for each card.
-        playerCardsBox.getChildren().clear();
-        dealerCardsBox.getChildren().clear();
-        // Add images for the cards here as needed
+    // Update game state when receiving info from server
+    public void updateGameState(PokerInfo pokerInfo) {
+        Platform.runLater(() -> {
+            if (pokerInfo.player != null) {
+                winningsLabel.setText("$" + pokerInfo.player.getTotalWinnings());
+            } else {
+                winningsLabel.setText("$0");
+            }
+
+            gameInfoText.setText(pokerInfo.gameRes);
+
+            // Clear previous card displays
+            playerCardsBox.getChildren().clear();
+            dealerCardsBox.getChildren().clear();
+
+            // TODO: Add code to display cards
+            // Placeholder for card display logic
+        });
+    }
+
+    // Reset winnings for fresh start
+    public void resetWinnings() {
+        // TODO: Implement reset logic
+        winningsLabel.setText("$0");
+        gameInfoText.setText("Game Reset");
+    }
+
+    // Show an alert with a given title and message
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

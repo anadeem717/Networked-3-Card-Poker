@@ -1,48 +1,51 @@
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import java.io.File;
 
 public class WelcomePageController {
-
     @FXML
     private TextField serverIpField;
 
     @FXML
     private TextField portField;
 
+    private ClientGUI clientGUI;
+
+    public void setClientGUI(ClientGUI clientGUI) {
+        this.clientGUI = clientGUI;
+    }
+
     @FXML
-    public void connectToServer() {
+    private void handleConnectToServer() {
         String serverIp = serverIpField.getText().trim();
         String portString = portField.getText().trim();
 
-        // Check if the IP and port are valid
         if (serverIp.isEmpty() || portString.isEmpty()) {
-            System.out.println("Please enter both IP and port.");
+            showErrorAlert("Input Error", "Please enter both IP and port.");
             return;
         }
 
         try {
             int port = Integer.parseInt(portString);
-            // Implement connection logic here (e.g., creating a socket connection)
-
-            // If connection is successful, switch to the game scene
-            switchToGameScene();
+            if (clientGUI != null) {
+                clientGUI.initializeConnection(serverIp, port);
+            } else {
+                showErrorAlert("Connection Error", "ClientGUI instance is not available.");
+            }
         } catch (NumberFormatException e) {
-            System.out.println("Invalid port number.");
-        } catch (Exception e) {
-            System.out.println("Error connecting to server: " + e.getMessage());
+            showErrorAlert("Invalid Port Number", "Please enter a valid port number.");
         }
     }
 
-    private void switchToGameScene() throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("gameplay.fxml"));
-        Parent root = loader.load();
-
-        Stage stage = (Stage) serverIpField.getScene().getWindow();
-        stage.setScene(new Scene(root, 600, 400));
-        stage.show();
+    // Public method to show error alerts
+    public void showErrorAlert(String title, String message) {
+        Alert alert = new Alert(AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

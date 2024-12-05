@@ -1,8 +1,8 @@
 DashboardController.class
 IntroController.class
 Deck.class
-Player.class
 ThreeCardLogic.class
+Player.class
 PokerInfo.class
 Server$ClientThread.class
 Server.class
