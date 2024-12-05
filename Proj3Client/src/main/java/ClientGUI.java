@@ -15,6 +15,7 @@ public class ClientGUI extends Application {
     private ObjectOutputStream out;
     private GameplayController gameplayController;
     private WelcomePageController welcomePageController;
+    Client clientConnection;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -41,6 +42,7 @@ public class ClientGUI extends Application {
                 socket = new Socket(serverIp, port);
                 out = new ObjectOutputStream(socket.getOutputStream());
                 in = new ObjectInputStream(socket.getInputStream());
+                socket.setTcpNoDelay(true);
 
                 // If connection successful, switch to gameplay scene
                 Platform.runLater(() -> {

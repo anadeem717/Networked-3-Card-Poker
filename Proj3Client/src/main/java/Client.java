@@ -4,9 +4,10 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
-public class Client {
+public class Client extends Thread {
 
     private Socket socketClient;
     private ObjectInputStream in;
@@ -21,14 +22,14 @@ public class Client {
         this.serverPort = serverPort;
     }
 
-    public void start() {
+    public void run() {
         new Thread(() -> {
             try {
+
                 socketClient = new Socket(serverIp, serverPort);
                 in = new ObjectInputStream(socketClient.getInputStream());
                 out = new ObjectOutputStream(socketClient.getOutputStream());
-
-                callback.accept("Connected to the server at " + serverIp + ":" + serverPort);
+                socketClient.setTcpNoDelay(true);
 
                 // Start a thread to listen for incoming data from the server
                 listenForIncomingData();
@@ -45,14 +46,16 @@ public class Client {
         new Thread(() -> {
             try {
                 while (true) {
-                    Serializable receivedData = (Serializable) in.readObject();
-                    callback.accept("Received from server: " + receivedData.toString());
+                    PokerInfo receivedData = (PokerInfo) in.readObject();
+                    callback.accept(receivedData);
                 }
             } catch (Exception e) {
                 callback.accept("Error reading from server: " + e.getMessage());
             }
         }).start();
     }
+
+
 
     public void send(Serializable data) {
         new Thread(() -> {

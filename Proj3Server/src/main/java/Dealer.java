@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Dealer {
+public class Dealer implements Serializable {
     private Deck theDeck;
     private ArrayList<Card> dealersHand;
 

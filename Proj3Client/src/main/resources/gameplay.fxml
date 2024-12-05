@@ -5,6 +5,7 @@
 <?import javafx.scene.text.Text?>
 <?import javafx.geometry.Insets?>
 
+<?import javafx.scene.image.ImageView?>
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="GameplayController">
@@ -18,27 +19,20 @@
                        style="-fx-font-size: 18px; -fx-text-fill: blue;" />
             </HBox>
 
-            <!-- Player cards display -->
-            <VBox alignment="CENTER" spacing="10">
-                <Label text="Player Cards" style="-fx-font-weight: bold;"/>
-                <HBox fx:id="playerCardsBox"
-                      alignment="CENTER"
-                      spacing="10"
-                      style="-fx-border-color: blue; -fx-border-width: 2px; -fx-padding: 10px;">
-                    <!-- Card placeholders will be added dynamically -->
-                </HBox>
-            </VBox>
-
             <!-- Dealer cards display -->
-            <VBox alignment="CENTER" spacing="10">
-                <Label text="Dealer Cards" style="-fx-font-weight: bold;"/>
-                <HBox fx:id="dealerCardsBox"
-                      alignment="CENTER"
-                      spacing="10"
-                      style="-fx-border-color: red; -fx-border-width: 2px; -fx-padding: 10px;">
-                    <!-- Card placeholders will be added dynamically -->
-                </HBox>
-            </VBox>
+            <HBox alignment="CENTER" spacing="10">
+                <ImageView fx:id="dealerCard1" fitHeight="150" fitWidth="100" />
+                <ImageView fx:id="dealerCard2" fitHeight="150" fitWidth="100" />
+                <ImageView fx:id="dealerCard3" fitHeight="150" fitWidth="100" />
+            </HBox>
+
+            <!-- Player cards display -->
+            <HBox alignment="CENTER" spacing="10">
+                <ImageView fx:id="playerCard1" fitHeight="150" fitWidth="100" />
+                <ImageView fx:id="playerCard2" fitHeight="150" fitWidth="100" />
+                <ImageView fx:id="playerCard3" fitHeight="150" fitWidth="100" />
+            </HBox>
+
 
             <!-- Bet options -->
             <VBox spacing="10" alignment="CENTER">
