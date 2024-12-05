@@ -3,9 +3,10 @@ IntroController.class
 Deck.class
 Player.class
 ThreeCardLogic.class
-App.class
+PokerInfo.class
 Server$ClientThread.class
 Server.class
 Card.class
+ServerGUI.class
 Dealer.class
 Server$TheServer.class

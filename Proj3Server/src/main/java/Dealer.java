@@ -53,4 +53,6 @@ public class Dealer {
         theDeck.newDeck();
     }
 
+    public ArrayList<Card> getHand() { return dealersHand; }
+
 }

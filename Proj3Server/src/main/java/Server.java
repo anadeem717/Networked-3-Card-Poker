@@ -12,6 +12,7 @@ public class Server {
     private TheServer server;
     private Consumer<Serializable> callback;
     int count = 1;
+    Dealer dealer;
 
     public Server(Consumer<Serializable> call) {
         callback = call;
@@ -35,6 +36,9 @@ public class Server {
         }
 
         public void run() {
+
+            dealer = new Dealer();
+
             try (ServerSocket mysocket = new ServerSocket(portNumber)) {
                 callback.accept("Server started on port: " + portNumber);
 
@@ -61,7 +65,7 @@ public class Server {
         }
     }
 
-    class ClientThread extends Thread {
+    public class ClientThread extends Thread {
 
         Socket connection;
         int count;
@@ -73,7 +77,6 @@ public class Server {
             this.count = count;
         }
 
-
         public void run() {
             try {
                 in = new ObjectInputStream(connection.getInputStream());
@@ -81,8 +84,13 @@ public class Server {
 
                 while (true) {
                     try {
-                        String data = in.readObject().toString();
-                        callback.accept("Client says: " + data);
+                        // Receive PokerInfo object from the client
+                        PokerInfo pokerInfo = (PokerInfo) in.readObject();
+                        callback.accept("Received from client: " + pokerInfo.toString());
+
+                        // Process the poker game logic in a separate function
+                        processPokerGame(pokerInfo);
+
                     } catch (Exception e) {
                         break;
                     }
@@ -95,5 +103,50 @@ public class Server {
                 }
             }
         }
+
+        private void processPokerGame(PokerInfo pokerInfo) {
+            try {
+                // Process the player's hand and calculate results
+                ArrayList<Card> playerHand = pokerInfo.player.getHand();
+                int playerHandValue = ThreeCardLogic.evalHand(playerHand);
+                int pairPlusWinnings = ThreeCardLogic.evalPPWinnings(playerHand, pokerInfo.antePlaced ? pokerInfo.player.getAnteBet() : 0);
+
+                // Assuming the dealer's hand is available
+                ArrayList<Card> dealerHand = dealer.getHand();
+                int dealerHandValue = ThreeCardLogic.evalHand(dealerHand);
+
+                // Compare dealer's and player's hands
+                int result = ThreeCardLogic.compareHands(dealerHand, playerHand);
+                String gameResult = "Tie";
+
+                if (result == 1) {
+                    gameResult = "Dealer Wins";
+                } else if (result == 2) {
+                    gameResult = "Player Wins";
+                }
+
+                // Update PokerInfo with results and send back to client
+                pokerInfo.gameRes = gameResult;
+                pokerInfo.playOrFold = "Continue"; // Adjust as needed (e.g., "Fold" or "Play")
+                pokerInfo.antePlaced = true; // Adjust based on your logic
+
+                // Send the updated PokerInfo back to the client
+                sendPokerInfoToClient(pokerInfo);
+
+            } catch (Exception e) {
+                callback.accept("Error processing PokerInfo: " + e.getMessage());
+            }
+        }
+
+        public void sendPokerInfoToClient(PokerInfo pokerInfo) {
+            try {
+                out.writeObject(pokerInfo);
+                out.flush();  // Ensure the data is sent immediately
+            } catch (Exception e) {
+                callback.accept("Error sending PokerInfo to client: " + e.getMessage());
+            }
+        }
+
+
     }
 }
