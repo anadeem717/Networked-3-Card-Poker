@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.image.ImageView?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="ClientGUI">
+    <!-- Menu bar -->
+    <top>
+        <MenuBar>
+            <Menu text="Menu">
+                <MenuItem text="Exit" onAction="#exitApplication" />
+                <MenuItem text="Fresh Start" onAction="#freshStartGame" />
+                <MenuItem text="New Look" onAction="#changeLook" />
+            </Menu>
+        </MenuBar>
+    </top>
+
+    <!-- Main content layout -->
+    <center>
+        <VBox spacing="10" padding="10">
+            <!-- Winnings display -->
+            <HBox spacing="10" padding="10">
+                <Label fx:id="winningsLabel" text="$0" style="-fx-font-size: 18px; -fx-text-fill: blue;" />
+            </HBox>
+
+            <!-- Player cards display -->
+            <HBox fx:id="playerCardsBox" spacing="10" padding="10">
+                <Label text="Player Cards" style="-fx-border-color: blue; -fx-border-width: 2px; -fx-padding: 5px;" />
+            </HBox>
+
+            <!-- Dealer cards display -->
+            <HBox fx:id="dealerCardsBox" spacing="10" padding="10">
+                <Label text="Dealer Cards" style="-fx-border-color: white; -fx-border-width: 2px; -fx-padding: 5px;" />
+            </HBox>
+
+            <!-- Bet options -->
+            <VBox spacing="5" padding="10">
+                <Label text="Player Bet Options" />
+                <Button fx:id="anteButton" text="Ante" onAction="#placeAnte" />
+                <Button fx:id="pairPlusButton" text="Pair Plus" onAction="#placePairPlus" />
+                <Button fx:id="playButton" text="Play" onAction="#playGame" />
+            </VBox>
+
+            <!-- Game information display -->
+            <Text fx:id="gameInfoText" text="Game info here" style="-fx-background-color: red; -fx-padding: 10px; -fx-font-size: 14px; -fx-text-fill: white;" />
+        </VBox>
+    </center>
+</BorderPane>
