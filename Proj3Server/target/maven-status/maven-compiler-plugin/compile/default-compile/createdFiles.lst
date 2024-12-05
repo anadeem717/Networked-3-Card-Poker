@@ -1,4 +1,11 @@
-Server.class
+DashboardController.class
+IntroController.class
+Deck.class
+Player.class
+ThreeCardLogic.class
+App.class
 Server$ClientThread.class
+Server.class
+Card.class
+Dealer.class
 Server$TheServer.class
-PokerServerGUI.class

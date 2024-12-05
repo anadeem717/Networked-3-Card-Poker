@@ -22,6 +22,10 @@ public class Server {
         server.start();
     }
 
+    public void stopServer() {
+        server.stopServer();
+    }
+
 
     class TheServer extends Thread {
         private int portNumber;
@@ -46,6 +50,13 @@ public class Server {
                 }
             } catch (Exception e) {
                 callback.accept("Server socket did not launch");
+            }
+        }
+
+        // Stop the server when the button is clicked
+        public void stopServer() {
+            if (server != null) {
+                System.exit(0);// Close the application
             }
         }
     }
