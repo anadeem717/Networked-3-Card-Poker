@@ -3,45 +3,39 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 public class GameplayController {
-    @FXML ImageView playerCard1, playerCard2, playerCard3, dealerCard1, dealerCard2, dealerCard3;
-
-    private ClientGUI clientGUI;
-    private ObjectOutputStream out;
+    @FXML
+    private ImageView playerCard1, playerCard2, playerCard3, dealerCard1, dealerCard2, dealerCard3;
 
     @FXML
     private Label winningsLabel;
 
-
     @FXML
-    private Button anteButton;
-
-    @FXML
-    private Button pairPlusButton;
-
-    @FXML
-    private Button playButton;
+    private Button anteButton, pairPlusButton, playButton, foldButton;
 
     @FXML
     private Text gameInfoText;
 
-    boolean cardsDealt = false;
+    @FXML
+    private TextField anteInput, pairPlusInput;
 
-    Player player;
-    Player dealer;
+    private ClientGUI clientGUI;
+    private ObjectOutputStream out;
+    private boolean cardsDealt = false;
+    private Player player;
+    private Player dealer;
 
     // Set the ClientGUI instance
     public void setClientGUI(ClientGUI clientGUI) {
         this.clientGUI = clientGUI;
     }
-
 
     // Set the output stream for sending messages
     public void setConnection(ObjectOutputStream out) {
@@ -50,22 +44,50 @@ public class GameplayController {
 
     @FXML
     public void placeAnte() {
-        sendPokerInfo("Ante placed", true, false);
+        try {
+            int anteValue = Integer.parseInt(anteInput.getText());
+            sendPokerInfo("Ante placed", anteValue, 0, false);
+        } catch (NumberFormatException e) {
+            showAlert("Invalid Input", "Please enter a valid numeric value for Ante.");
+        }
     }
 
     @FXML
     public void placePairPlus() {
-        sendPokerInfo("Pair Plus placed", false, true);
+        try {
+            int pairPlusValue = Integer.parseInt(pairPlusInput.getText());
+            sendPokerInfo("Pair Plus placed", 0, pairPlusValue, false);
+        } catch (NumberFormatException e) {
+            showAlert("Invalid Input", "Please enter a valid numeric value for Pair Plus.");
+        }
     }
 
     @FXML
     public void playGame() {
-        sendPokerInfo("Playing", true, true);
+        sendPokerInfo("Playing", 0, 0, true);
+    }
+
+    @FXML
+    public void foldGame() {
+        sendPokerInfo("Fold", 0, 0, false);
     }
 
     // Generic method to send poker info
-    private void sendPokerInfo(String action, boolean antePlaced, boolean pairPlusPlaced) {
-        // todo setup logic
+    private void sendPokerInfo(String action, int anteValue, int pairPlusValue, boolean isPlay) {
+        try {
+            PokerInfo pokerInfo = new PokerInfo(
+                    player,                // Player instance
+                    "Action: " + action,   // Game action description
+                    isPlay ? "Play" : "Fold", // Play or fold action
+                    anteValue > 0,         // Ante placed (true if anteValue > 0)
+                    pairPlusValue > 0,     // Pair Plus placed (true if pairPlusValue > 0)
+                    false                  // Is dealer (always false for player actions)
+            );
+
+            clientGUI.sendPokerInfo(pokerInfo); // Send PokerInfo to the server
+        } catch (Exception e) {
+            showAlert("Error", "An error occurred while sending PokerInfo to the server: " + e.getMessage());
+        }
     }
 
     // Update game state when receiving info from server
@@ -79,9 +101,12 @@ public class GameplayController {
 
             gameInfoText.setText(pokerInfo.gameRes);
 
-            // card display logic
-            if (pokerInfo.isDealer) { dealer = pokerInfo.player; }
-            else { player = pokerInfo.player; }
+            // Card display logic
+            if (pokerInfo.isDealer) {
+                dealer = pokerInfo.player;
+            } else {
+                player = pokerInfo.player;
+            }
 
             if (dealer != null && player != null) {
                 cardsDealt = true;
@@ -92,9 +117,10 @@ public class GameplayController {
 
     // Reset winnings for fresh start
     public void resetWinnings() {
-        // TODO: Implement reset logic
         winningsLabel.setText("$0");
         gameInfoText.setText("Game Reset");
+        anteInput.clear();
+        pairPlusInput.clear();
     }
 
     // Show an alert with a given title and message
@@ -105,56 +131,63 @@ public class GameplayController {
         alert.showAndWait();
     }
 
-    private void findCardImages(ArrayList<Card> dealerHand, ArrayList<Card> playerOneHand) {
-
+    private void findCardImages(ArrayList<Card> dealerHand, ArrayList<Card> playerHand) {
         if (cardsDealt) {
-
-            // Show Player 1's and Player 2's cards after dealing
-            playerCard1.setImage(new Image(getCardImagePath(playerOneHand.get(0))));
-            playerCard2.setImage(new Image(getCardImagePath(playerOneHand.get(1))));
-            playerCard3.setImage(new Image(getCardImagePath(playerOneHand.get(2))));
+            playerCard1.setImage(new Image(getCardImagePath(playerHand.get(0))));
+            playerCard2.setImage(new Image(getCardImagePath(playerHand.get(1))));
+            playerCard3.setImage(new Image(getCardImagePath(playerHand.get(2))));
 
             dealerCard1.setImage(new Image(getCardImagePath(dealerHand.get(0))));
             dealerCard2.setImage(new Image(getCardImagePath(dealerHand.get(1))));
             dealerCard3.setImage(new Image(getCardImagePath(dealerHand.get(2))));
-
-
         } else {
-            // Initially show only back of cards
-            dealerCard1.setImage(new Image("/CardImages/back.png"));
-            dealerCard2.setImage(new Image("/CardImages/back.png"));
-            dealerCard3.setImage(new Image("/CardImages/back.png"));
+            String backImagePath = "/CardImages/back.png";
+            dealerCard1.setImage(new Image(backImagePath));
+            dealerCard2.setImage(new Image(backImagePath));
+            dealerCard3.setImage(new Image(backImagePath));
 
-            playerCard1.setImage(new Image("/CardImages/back.png"));
-            playerCard2.setImage(new Image("/CardImages/back.png"));
-            playerCard3.setImage(new Image("/CardImages/back.png"));
-
+            playerCard1.setImage(new Image(backImagePath));
+            playerCard2.setImage(new Image(backImagePath));
+            playerCard3.setImage(new Image(backImagePath));
         }
     }
 
     private String getCardImagePath(Card card) {
         String valueString = getCardValueString(card.value);
-        char suit = card.suit;
-
         String suitString = "";
-        if (suit == 'C') {
-            suitString = "clubs";
-        } else if (suit == 'D') {
-            suitString = "diamonds";
-        } else if (suit == 'H') {
-            suitString = "hearts";
-        } else if (suit == 'S') {
-            suitString = "spades";
+
+        switch (card.suit) {
+            case 'C':
+                suitString = "clubs";
+                break;
+            case 'D':
+                suitString = "diamonds";
+                break;
+            case 'H':
+                suitString = "hearts";
+                break;
+            case 'S':
+                suitString = "spades";
+                break;
+            default:
+                suitString = "unknown";
         }
 
         return "/CardImages/" + valueString + "_of_" + suitString + ".png";
     }
 
     private String getCardValueString(int value) {
-        if (value == 11) return "jack";
-        else if (value == 12) return "queen";
-        else if (value == 13) return "king";
-        else if (value == 14) return "ace";
-        else return String.valueOf(value);
+        switch (value) {
+            case 11:
+                return "jack";
+            case 12:
+                return "queen";
+            case 13:
+                return "king";
+            case 14:
+                return "ace";
+            default:
+                return String.valueOf(value);
+        }
     }
 }

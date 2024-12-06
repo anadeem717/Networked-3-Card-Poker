@@ -4,8 +4,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.text.Text?>
 <?import javafx.geometry.Insets?>
-
 <?import javafx.scene.image.ImageView?>
+
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="GameplayController">
@@ -33,23 +33,25 @@
                 <ImageView fx:id="playerCard3" fitHeight="150" fitWidth="100" />
             </HBox>
 
-
-            <!-- Bet options -->
+            <!-- Betting options -->
             <VBox spacing="10" alignment="CENTER">
-                <Label text="Betting Options" style="-fx-font-weight: bold;"/>
+                <Label text="Betting Options" style="-fx-font-weight: bold;" />
+                <!-- Ante Bet -->
                 <HBox spacing="10" alignment="CENTER">
-                    <Button fx:id="anteButton"
-                            text="Ante"
-                            onAction="#placeAnte"
-                            styleClass="bet-button"/>
-                    <Button fx:id="pairPlusButton"
-                            text="Pair Plus"
-                            onAction="#placePairPlus"
-                            styleClass="bet-button"/>
-                    <Button fx:id="playButton"
-                            text="Play"
-                            onAction="#playGame"
-                            styleClass="bet-button"/>
+                    <Label text="Ante Bet:" />
+                    <TextField fx:id="anteInput" promptText="Enter Ante Amount" />
+                </HBox>
+                <!-- Pair Plus Bet -->
+                <HBox spacing="10" alignment="CENTER">
+                    <Label text="Pair Plus Bet:" />
+                    <TextField fx:id="pairPlusInput" promptText="Enter Pair Plus Amount" />
+                </HBox>
+                <!-- Action Buttons -->
+                <HBox spacing="10" alignment="CENTER">
+                    <Button fx:id="anteButton" text="Ante" onAction="#placeAnte" />
+                    <Button fx:id="pairPlusButton" text="Pair Plus" onAction="#placePairPlus" />
+                    <Button fx:id="playButton" text="Play" onAction="#playGame" />
+                    <Button fx:id="foldButton" text="Fold" onAction="#foldGame" />
                 </HBox>
             </VBox>
 
@@ -59,7 +61,7 @@
                   style="-fx-background-color: lightgray;
                          -fx-padding: 10px;
                          -fx-font-size: 14px;
-                         -fx-text-fill: black;"/>
+                         -fx-text-fill: black;" />
         </VBox>
     </center>
 </BorderPane>
