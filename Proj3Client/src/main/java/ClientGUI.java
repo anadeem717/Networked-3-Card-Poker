@@ -89,7 +89,7 @@ public class ClientGUI extends Application {
 
         gameplayController = loader.getController();
         gameplayController.setClientGUI(this);
-        gameplayController.setConnection(out);  // Pass output stream for sending messages
+        gameplayController.setConnection(out, in);  // Pass output stream for sending messages
 
         primaryStage.setScene(new Scene(gameRoot, 800, 600));
         primaryStage.setTitle("Three Card Poker - Gameplay");

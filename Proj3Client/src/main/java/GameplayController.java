@@ -1,155 +1,194 @@
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
+import java.io.ObjectInputStream;
+import java.net.Socket;
 
 public class GameplayController {
     @FXML
     private ImageView playerCard1, playerCard2, playerCard3, dealerCard1, dealerCard2, dealerCard3;
-
+    @FXML
+    private Button dealButton, playButton, foldButton, anteButton, pairPlusButton;
+    @FXML
+    private Text gameInfoText;
+    @FXML
+    private TextField anteInput, pairPlusInput;
     @FXML
     private Label winningsLabel;
 
-    @FXML
-    private Button anteButton, pairPlusButton, playButton, foldButton;
-
-    @FXML
-    private Text gameInfoText;
-
-    @FXML
-    private TextField anteInput, pairPlusInput;
-
     private ClientGUI clientGUI;
     private ObjectOutputStream out;
+    private ObjectInputStream in;
     private boolean cardsDealt = false;
-    private Player player;
-    private Player dealer;
 
-    // Set the ClientGUI instance
+    // Initial card back image path
+    private final String cardBackImagePath = "/CardImages/back.png";
+
+    // Set client GUI
     public void setClientGUI(ClientGUI clientGUI) {
         this.clientGUI = clientGUI;
     }
 
-    // Set the output stream for sending messages
-    public void setConnection(ObjectOutputStream out) {
+    // Set connection with socket
+    public void setConnection(Socket socket) {
+        try {
+            this.out = new ObjectOutputStream(socket.getOutputStream());
+            this.in = new ObjectInputStream(socket.getInputStream());
+            socket.setTcpNoDelay(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setConnection(ObjectOutputStream out, ObjectInputStream in) {
         this.out = out;
+        this.in = in;
     }
 
     @FXML
-    public void placeAnte() {
+    public void initialize() {
+        // Set initial card backs when the UI is initialized
+        setCardBacks();
+        // Disable play and fold buttons initially
+        playButton.setDisable(true);
+        foldButton.setDisable(true);
+    }
+
+    @FXML
+    public void dealCards() {
         try {
-            int anteValue = Integer.parseInt(anteInput.getText());
-            sendPokerInfo("Ante placed", anteValue, 0, false);
-        } catch (NumberFormatException e) {
-            showAlert("Invalid Input", "Please enter a valid numeric value for Ante.");
+            PokerInfo request = new PokerInfo();
+            request.setIsDealer(false); // Indicate that we're requesting the player's hand
+            out.writeObject(request);
+            out.flush();
+
+            // Wait for the server to send the player's hand
+            new Thread(() -> {
+                try {
+                    PokerInfo pokerInfo = (PokerInfo) in.readObject();
+                    Platform.runLater(() -> {
+                        if (pokerInfo != null && pokerInfo.getPlayer() != null && pokerInfo.getPlayer().getHand() != null) {
+                            updateGameState(pokerInfo);
+                            cardsDealt = true; // Set flag to true after dealing the cards
+                        } else {
+                            System.out.println("Error: pokerInfo or pokerInfo.player is null");
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     @FXML
-    public void placePairPlus() {
+    public void placeAnteBet() {
         try {
-            int pairPlusValue = Integer.parseInt(pairPlusInput.getText());
-            sendPokerInfo("Pair Plus placed", 0, pairPlusValue, false);
+            double anteBet = Double.parseDouble(anteInput.getText().trim());
+            if (anteBet > 0) {
+                PokerInfo betInfo = new PokerInfo();
+                betInfo.setAntePlaced(true);
+                // You might want to add ante amount logic here if needed
+                out.writeObject(betInfo);
+                out.flush();
+                System.out.println("Ante bet placed: $" + anteBet);
+            } else {
+                System.out.println("Invalid ante bet amount.");
+            }
         } catch (NumberFormatException e) {
-            showAlert("Invalid Input", "Please enter a valid numeric value for Pair Plus.");
+            System.out.println("Invalid input for ante bet. Please enter a valid number.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void placePairPlusBet() {
+        try {
+            double pairPlusBet = Double.parseDouble(pairPlusInput.getText().trim());
+            if (pairPlusBet > 0) {
+                PokerInfo betInfo = new PokerInfo();
+                betInfo.setPairPlusPlaced(true);
+                // You might want to add pair plus amount logic here if needed
+                out.writeObject(betInfo);
+                out.flush();
+                System.out.println("Pair Plus bet placed: $" + pairPlusBet);
+            } else {
+                System.out.println("Invalid pair plus bet amount.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input for pair plus bet. Please enter a valid number.");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     @FXML
     public void playGame() {
-        sendPokerInfo("Playing", 0, 0, true);
+        // Send a request to the server to reveal the dealer's hand
+        try {
+            PokerInfo request = new PokerInfo();
+            request.setIsDealer(true); // Indicates that we are requesting the dealer's hand
+            out.writeObject(request);
+            out.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Update game info text
+        gameInfoText.setText("Dealer's cards revealed. Game in progress.");
+        playButton.setDisable(true);
+        foldButton.setDisable(true);
     }
 
     @FXML
     public void foldGame() {
-        sendPokerInfo("Fold", 0, 0, false);
+        // Logic for folding...
+        playButton.setDisable(true);
+        foldButton.setDisable(true);
+        gameInfoText.setText("You folded. Game over.");
     }
 
-    // Generic method to send poker info
-    private void sendPokerInfo(String action, int anteValue, int pairPlusValue, boolean isPlay) {
-        try {
-            PokerInfo pokerInfo = new PokerInfo(
-                    player,                // Player instance
-                    "Action: " + action,   // Game action description
-                    isPlay ? "Play" : "Fold", // Play or fold action
-                    anteValue > 0,         // Ante placed (true if anteValue > 0)
-                    pairPlusValue > 0,     // Pair Plus placed (true if pairPlusValue > 0)
-                    false                  // Is dealer (always false for player actions)
-            );
-
-            clientGUI.sendPokerInfo(pokerInfo); // Send PokerInfo to the server
-        } catch (Exception e) {
-            showAlert("Error", "An error occurred while sending PokerInfo to the server: " + e.getMessage());
-        }
-    }
-
-    // Update game state when receiving info from server
     public void updateGameState(PokerInfo pokerInfo) {
         Platform.runLater(() -> {
-            if (pokerInfo.player != null) {
-                winningsLabel.setText("$" + pokerInfo.player.getTotalWinnings());
+            // Update player winnings and game info
+            if (pokerInfo.getPlayer() != null) {
+                winningsLabel.setText("$" + pokerInfo.getPlayer().getTotalWinnings());
             } else {
                 winningsLabel.setText("$0");
             }
 
-            gameInfoText.setText(pokerInfo.gameRes);
+            gameInfoText.setText(pokerInfo.getGameRes());
 
-            // Card display logic
-            if (pokerInfo.isDealer) {
-                dealer = pokerInfo.player;
-            } else {
-                player = pokerInfo.player;
-            }
-
-            if (dealer != null && player != null) {
-                cardsDealt = true;
-                findCardImages(dealer.getHand(), player.getHand());
+            // Check if cards have been dealt before showing player cards
+            if (cardsDealt) {
+                try {
+                    // Display the player's cards
+                    playerCard1.setImage(new Image(getCardImagePath(pokerInfo.getPlayer().getHand().get(0))));
+                    playerCard2.setImage(new Image(getCardImagePath(pokerInfo.getPlayer().getHand().get(1))));
+                    playerCard3.setImage(new Image(getCardImagePath(pokerInfo.getPlayer().getHand().get(2))));
+                } catch (Exception e) {
+                    System.out.println("Error loading card images: " + e.getMessage());
+                }
             }
         });
     }
 
-    // Reset winnings for fresh start
-    public void resetWinnings() {
-        winningsLabel.setText("$0");
-        gameInfoText.setText("Game Reset");
-        anteInput.clear();
-        pairPlusInput.clear();
-    }
-
-    // Show an alert with a given title and message
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void findCardImages(ArrayList<Card> dealerHand, ArrayList<Card> playerHand) {
-        if (cardsDealt) {
-            playerCard1.setImage(new Image(getCardImagePath(playerHand.get(0))));
-            playerCard2.setImage(new Image(getCardImagePath(playerHand.get(1))));
-            playerCard3.setImage(new Image(getCardImagePath(playerHand.get(2))));
-
-            dealerCard1.setImage(new Image(getCardImagePath(dealerHand.get(0))));
-            dealerCard2.setImage(new Image(getCardImagePath(dealerHand.get(1))));
-            dealerCard3.setImage(new Image(getCardImagePath(dealerHand.get(2))));
-        } else {
-            String backImagePath = "/CardImages/back.png";
-            dealerCard1.setImage(new Image(backImagePath));
-            dealerCard2.setImage(new Image(backImagePath));
-            dealerCard3.setImage(new Image(backImagePath));
-
-            playerCard1.setImage(new Image(backImagePath));
-            playerCard2.setImage(new Image(backImagePath));
-            playerCard3.setImage(new Image(backImagePath));
-        }
+    private void setCardBacks() {
+        dealerCard1.setImage(new Image(cardBackImagePath));
+        dealerCard2.setImage(new Image(cardBackImagePath));
+        dealerCard3.setImage(new Image(cardBackImagePath));
+        playerCard1.setImage(new Image(cardBackImagePath));
+        playerCard2.setImage(new Image(cardBackImagePath));
+        playerCard3.setImage(new Image(cardBackImagePath));
     }
 
     private String getCardImagePath(Card card) {
@@ -157,20 +196,11 @@ public class GameplayController {
         String suitString = "";
 
         switch (card.suit) {
-            case 'C':
-                suitString = "clubs";
-                break;
-            case 'D':
-                suitString = "diamonds";
-                break;
-            case 'H':
-                suitString = "hearts";
-                break;
-            case 'S':
-                suitString = "spades";
-                break;
-            default:
-                suitString = "unknown";
+            case 'C': suitString = "clubs"; break;
+            case 'D': suitString = "diamonds"; break;
+            case 'H': suitString = "hearts"; break;
+            case 'S': suitString = "spades"; break;
+            default: suitString = "unknown";
         }
 
         return "/CardImages/" + valueString + "_of_" + suitString + ".png";
@@ -178,16 +208,11 @@ public class GameplayController {
 
     private String getCardValueString(int value) {
         switch (value) {
-            case 11:
-                return "jack";
-            case 12:
-                return "queen";
-            case 13:
-                return "king";
-            case 14:
-                return "ace";
-            default:
-                return String.valueOf(value);
+            case 11: return "jack";
+            case 12: return "queen";
+            case 13: return "king";
+            case 14: return "ace";
+            default: return String.valueOf(value);
         }
     }
 }

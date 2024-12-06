@@ -2,7 +2,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class PokerInfo implements Serializable {
-
+    private static final long serialVersionUID = 2403158786615537613L;  // Choose a unique value for this class
     Player player;
     String gameRes;
     String playOrFold;
