@@ -24,7 +24,6 @@ public class DashboardController {
             server.start(portNumber);
 
             // Log the server start and update the UI
-            serverLog.getItems().add("Server started on port: " + portNumber);
             clientCountLabel.setText("Clients Connected: 0");
 
         } catch (Exception e) {

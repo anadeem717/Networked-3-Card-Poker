@@ -1,13 +1,13 @@
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.function.Consumer;
 
-public class Client extends Thread {
+
+public class Client extends Thread{
 
     private Socket socketClient;
     private ObjectInputStream in;
@@ -23,60 +23,38 @@ public class Client extends Thread {
     }
 
     public void run() {
-        new Thread(() -> {
-            try {
 
-                socketClient = new Socket(serverIp, serverPort);
-                in = new ObjectInputStream(socketClient.getInputStream());
-                out = new ObjectOutputStream(socketClient.getOutputStream());
-                socketClient.setTcpNoDelay(true);
-
-                // Start a thread to listen for incoming data from the server
-                listenForIncomingData();
-
-            } catch (UnknownHostException e) {
-                callback.accept("Unknown host: " + serverIp);
-            } catch (IOException e) {
-                callback.accept("Error connecting to server: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    private void listenForIncomingData() {
-        new Thread(() -> {
-            try {
-                while (true) {
-                    PokerInfo receivedData = (PokerInfo) in.readObject();
-                    callback.accept(receivedData);
-                }
-            } catch (Exception e) {
-                callback.accept("Error reading from server: " + e.getMessage());
-            }
-        }).start();
-    }
-
-
-
-    public void send(Serializable data) {
-        new Thread(() -> {
-            try {
-                out.writeObject(data);
-                out.flush();
-                callback.accept("Data sent to server: " + data.toString());
-            } catch (IOException e) {
-                callback.accept("Error sending data to server: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    public void close() {
         try {
-            if (in != null) in.close();
-            if (out != null) out.close();
-            if (socketClient != null) socketClient.close();
-            callback.accept("Connection closed.");
+
+            socketClient = new Socket(serverIp, serverPort);
+            in = new ObjectInputStream(socketClient.getInputStream());
+            out = new ObjectOutputStream(socketClient.getOutputStream());
+            socketClient.setTcpNoDelay(true);
+
+            while(true) {
+
+                try {
+                    PokerInfo data = (PokerInfo) in.readObject();
+                    callback.accept(data);
+                }
+                catch(Exception e) {}
+            }
+
+        } catch (UnknownHostException e) {
+            callback.accept("Unknown host: " + serverIp);
         } catch (IOException e) {
-            callback.accept("Error closing connection: " + e.getMessage());
+            callback.accept("Error connecting to server: " + e.getMessage());
+        }
+    }
+
+    public void send(PokerInfo data) {
+
+        try {
+            out.writeObject(data);
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
+

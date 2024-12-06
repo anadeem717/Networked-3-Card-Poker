@@ -36,36 +36,34 @@ public class ClientGUI extends Application {
 
     // Method to initialize connection from the welcome screen
     public void initializeConnection(String serverIp, int port) {
-        new Thread(() -> {
-            try {
-                // Attempt to establish socket connection
-                socket = new Socket(serverIp, port);
-                out = new ObjectOutputStream(socket.getOutputStream());
-                in = new ObjectInputStream(socket.getInputStream());
-                socket.setTcpNoDelay(true);
+        try {
+            // Attempt to establish socket connection
+            socket = new Socket(serverIp, port);
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
+            socket.setTcpNoDelay(true);
 
-                // If connection successful, switch to gameplay scene
-                Platform.runLater(() -> {
-                    try {
-                        switchToGameplay();
-                    } catch (Exception e) {
-                        showConnectionError("Error switching to gameplay: " + e.getMessage());
-                    }
-                });
+            // If connection successful, switch to gameplay scene
+            Platform.runLater(() -> {
+                try {
+                    switchToGameplay();
+                } catch (Exception e) {
+                    showConnectionError("Error switching to gameplay: " + e.getMessage());
+                }
+            });
 
-                // Start listening for server messages
-                startMessageListener();
+            // Start listening for server messages
+            startDataListener();
 
-            } catch (Exception e) {
-                Platform.runLater(() -> {
-                    showConnectionError("Connection failed: " + e.getMessage());
-                });
-            }
-        }).start();
+        } catch (Exception e) {
+            Platform.runLater(() -> {
+                showConnectionError("Connection failed: " + e.getMessage());
+            });
+        }
     }
 
     // Method to listen for incoming messages
-    private void startMessageListener() {
+    private void startDataListener() {
         new Thread(() -> {
             try {
                 while (true) {

@@ -50,6 +50,7 @@ public class Server {
                     }
 
                     callback.accept("Client " + count + " connected.");
+                    count++;
                     clientThread.start();
                 }
             } catch (Exception e) {
